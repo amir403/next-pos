@@ -17,6 +17,7 @@
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-color: #FFFBEB;
   }
 }
 
@@ -407,6 +408,57 @@
 
 .swal2-timer-progress-bar {
   height: 3px !important;
+}
+
+/* Application color palette */
+:root {
+  --forest-green: #065F46;
+  --sage-green: #A7F3D0;
+  --earthy-brown: #78350F;
+  --canvas: #FFFBEB;
+}
+
+.bg-blue-600, .bg-blue-700, .bg-green-600, .bg-green-700 {
+  background-color: var(--forest-green) !important;
+}
+
+.bg-blue-500, .bg-green-500 {
+  background-color: var(--forest-green) !important;
+}
+
+.bg-blue-50, .bg-green-50, .bg-green-100 {
+  background-color: var(--sage-green) !important;
+}
+
+.text-blue-600, .text-blue-700, .text-green-600, .text-green-700,
+.text-green-800 {
+  color: var(--forest-green) !important;
+}
+
+.text-blue-100, .text-blue-200, .text-green-100, .text-green-200 {
+  color: var(--sage-green) !important;
+}
+
+.border-blue-500, .border-blue-600, .focus\:border-blue-500:focus {
+  border-color: var(--forest-green) !important;
+}
+
+.ring-blue-500:focus, .focus\:ring-blue-500:focus {
+  --tw-ring-color: var(--forest-green) !important;
+}
+
+.bg-gray-50, .bg-slate-50 {
+  background-color: var(--canvas) !important;
+}
+
+.text-orange-500, .text-orange-600, .text-orange-700,
+.border-orange-200 {
+  color: var(--earthy-brown) !important;
+  border-color: var(--earthy-brown) !important;
+}
+
+.bg-orange-500, .bg-orange-600 {
+  background-color: var(--earthy-brown) !important;
 }
 
 @keyframes swal2-show {
