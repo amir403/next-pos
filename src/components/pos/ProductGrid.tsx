@@ -292,7 +292,7 @@ function ProductCard({ product, onAddToCart, isTouchMode, currency }: ProductCar
     >
       <div className="flex flex-col h-full">
         {/* Product Image */}
-        <div className={`bg-gray-100 rounded-xl mb-3 flex items-center justify-center relative overflow-hidden ${
+        <div className={`bg-transparent border border-[#D6B98C] rounded-xl mb-3 flex items-center justify-center relative overflow-hidden ${
           isTouchMode ? 'h-28' : 'h-24'
         }`}>
           {productImage ? (
@@ -302,7 +302,7 @@ function ProductCard({ product, onAddToCart, isTouchMode, currency }: ProductCar
               className="h-full w-full object-contain rounded-xl p-2" 
             />
           ) : (
-            <Package className={`text-gray-400 ${isTouchMode ? 'h-10 w-10' : 'h-8 w-8'}`} />
+            <Package className={`text-[#78350F] opacity-60 ${isTouchMode ? 'h-10 w-10' : 'h-8 w-8'}`} />
           )}
           
           {/* Weight-based indicator */}
