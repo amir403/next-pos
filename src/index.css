@@ -451,6 +451,15 @@
   background-color: var(--canvas) !important;
 }
 
+/* Keep all application surfaces on the warm canvas instead of mixing white panels. */
+.bg-white, .card, .modal, .sidebar {
+  background-color: var(--canvas) !important;
+}
+
+.bg-gray-100 {
+  background-color: var(--sage-green) !important;
+}
+
 .text-orange-500, .text-orange-600, .text-orange-700,
 .border-orange-200 {
   color: var(--earthy-brown) !important;
