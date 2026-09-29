@@ -1,9 +1,9 @@
 {
-  "name": "nextera-pos-system",
+  "name": "pos-system",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "A modern POS system built with React and Supabase",
+  "description": "A modern point of sale system built with React and Supabase",
   "keywords": [
     "react",
     "supabase",
@@ -12,7 +12,6 @@
     "system",
     "ecommerce"
   ],
-  "author": "Chandira Ekanayaka <info@iamchandira.com>",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",

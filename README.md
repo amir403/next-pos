@@ -1,4 +1,4 @@
-# Nextera POS System
+# POS System
 
 A modern, feature-rich Point of Sale (POS) system built with React, TypeScript, and Supabase. Designed for retail businesses of all sizes with comprehensive inventory management, sales tracking, customer management, and analytics.
 
@@ -56,8 +56,8 @@ A modern, feature-rich Point of Sale (POS) system built with React, TypeScript, 
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/iamchandira/nextera-pos-system
-   cd pos
+   git clone https://github.com/amir403/next-pos
+   cd next-pos
    ```
 
 2. **Install dependencies**
@@ -293,8 +293,6 @@ This software is provided free of charge for personal, non-commercial use.
 
 Commercial use, including but not limited to use in proprietary software, services for a fee, or redistribution for profit, is not permitted without prior written consent from the author.
 
-To inquire about commercial licensing, please contact: **info@iamchandira.com**
-
 ### Permitted Uses:
 - Personal learning and development
 - Educational purposes
@@ -306,8 +304,6 @@ To inquire about commercial licensing, please contact: **info@iamchandira.com**
 - Resale or redistribution for profit
 - Integration into paid software or services
 - Use in proprietary business applications
-
-For questions about licensing terms or to request commercial usage rights, please reach out to **info@iamchandira.com**.
 
 ## 🙏 Acknowledgments
 
@@ -321,5 +317,3 @@ For questions about licensing terms or to request commercial usage rights, pleas
 
 **Version**: 1.0.0  
 **Last Updated**: August 2025  
-**Developed by**: Chandira Ekanayaka  
-**Contact**: info@iamchandira.com

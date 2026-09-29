@@ -73,10 +73,10 @@ const initialState: AppState = {
   currentUser: null,
   selectedCustomer: null,
   settings: {
-    storeName: 'Nextera POS',
+    storeName: 'POS System',
     storeAddress: '123 Business Street, Colombo 03, Sri Lanka',
     storePhone: '+94 11 234 5678',
-    storeEmail: 'info@nexterapos.lk',
+    storeEmail: 'store@example.com',
     taxRate: 0,
     currency: 'PKR',
     interfaceMode: 'touch',

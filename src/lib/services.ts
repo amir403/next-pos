@@ -523,7 +523,7 @@ export const settingsService = {
     if (error) throw error
 
     return {
-      storeName: data.store_name || 'Nextera POS',
+      storeName: data.store_name || 'POS System',
       storeAddress: data.store_address || '',
       storePhone: data.store_phone || '',
       storeEmail: data.store_email || '',
@@ -574,7 +574,7 @@ export const settingsService = {
     if (error) throw error
 
     return {
-      storeName: data.store_name || 'Nextera POS',
+      storeName: data.store_name || 'POS System',
       storeAddress: data.store_address || '',
       storePhone: data.store_phone || '',
       storeEmail: data.store_email || '',
