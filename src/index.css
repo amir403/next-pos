@@ -422,6 +422,32 @@
   background-color: var(--forest-green) !important;
 }
 
+/* Normalize remaining dashboard gradients to the approved palette. */
+.from-blue-500, .from-blue-600, .from-green-500, .from-green-600 {
+  --tw-gradient-from: var(--forest-green) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(6 95 70 / 0) var(--tw-gradient-to-position) !important;
+}
+
+.to-blue-600, .to-blue-700, .to-green-600, .to-green-700 {
+  --tw-gradient-to: var(--forest-green) var(--tw-gradient-to-position) !important;
+}
+
+.from-purple-500, .from-purple-600, .from-orange-500, .from-orange-600,
+.from-pink-500, .from-red-500 {
+  --tw-gradient-from: var(--earthy-brown) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(120 53 15 / 0) var(--tw-gradient-to-position) !important;
+}
+
+.to-purple-600, .to-purple-700, .to-orange-600, .to-orange-700,
+.to-pink-600, .to-red-600 {
+  --tw-gradient-to: var(--earthy-brown) var(--tw-gradient-to-position) !important;
+}
+
+.bg-purple-500, .bg-purple-600, .bg-pink-500, .bg-pink-600,
+.bg-orange-500, .bg-orange-600, .bg-red-500, .bg-red-600 {
+  background-color: var(--earthy-brown) !important;
+}
+
 .bg-blue-500, .bg-green-500 {
   background-color: var(--forest-green) !important;
 }
