@@ -7,6 +7,17 @@ interface ProductGridProps {
   onAddToCart: (product: Product, weight?: number) => void;
 }
 
+const categoryImages: Record<string, string> = {
+  'Hand Tools': 'https://images.unsplash.com/photo-1581147036324-c17ac41f3e6e?auto=format&fit=crop&w=800&q=85',
+  'Power Tools': 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=800&q=85',
+  'Fasteners': 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=800&q=85',
+  'Electrical': 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=800&q=85',
+  'Plumbing': 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=800&q=85',
+  'Paint & Adhesives': 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&w=800&q=85',
+  'Safety Equipment': 'https://images.unsplash.com/photo-1617471346061-5d329ab9b574?auto=format&fit=crop&w=800&q=85',
+  'Building Materials': 'https://images.unsplash.com/photo-1503387762-5929c0b7d3a4?auto=format&fit=crop&w=800&q=85'
+};
+
 export function ProductGrid({ onAddToCart }: ProductGridProps) {
   const { state } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
@@ -90,8 +101,18 @@ export function ProductGrid({ onAddToCart }: ProductGridProps) {
                 placeholder="Search products by name, SKU, or barcode..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`input pl-12 ${isTouchMode ? 'h-14 text-lg' : 'h-12'}`}
+                className={`input pl-12 pr-12 ${isTouchMode ? 'h-14 text-lg' : 'h-12'}`}
               />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  aria-label="Clear product search"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
             </div>
             
             <div className="relative flex items-center">
@@ -152,10 +173,10 @@ export function ProductGrid({ onAddToCart }: ProductGridProps) {
               <p className="text-gray-400 text-sm mt-1">Try adjusting your search or filters</p>
             </div>
           ) : (
-            <div className={`grid gap-4 lg:gap-6 ${
+            <div className={`grid gap-3 lg:gap-4 ${
               isTouchMode 
-                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
+                ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4' 
+                : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4'
             }`}>
               {filteredProducts.map((product) => (
                 <ProductCard
@@ -258,26 +279,27 @@ function ProductCard({ product, onAddToCart, isTouchMode, currency }: ProductCar
   const shouldTrackInventory = product.trackInventory !== false;
   const isLowStock = shouldTrackInventory ? product.stock <= product.minStock : false;
   const isOutOfStock = shouldTrackInventory ? product.stock === 0 : false;
+  const productImage = product.image || categoryImages[product.category];
 
   return (
     <div
       className={`card card-hover cursor-pointer transition-all duration-200 ${
         isLowStock && !isOutOfStock ? 'border-orange-200 bg-orange-50' : ''
       } ${isOutOfStock ? 'border-red-200 bg-red-50 opacity-75' : ''} ${
-        isTouchMode ? 'p-4' : 'p-3'
+        isTouchMode ? 'p-3' : 'p-2'
       }`}
       onClick={() => !isOutOfStock && onAddToCart(product)}
     >
       <div className="flex flex-col h-full">
         {/* Product Image */}
-        <div className={`bg-gray-100 rounded-2xl mb-4 flex items-center justify-center relative overflow-hidden ${
-          isTouchMode ? 'h-32' : 'h-24'
+        <div className={`bg-gray-100 rounded-xl mb-3 flex items-center justify-center relative overflow-hidden ${
+          isTouchMode ? 'h-28' : 'h-24'
         }`}>
-          {product.image ? (
+          {productImage ? (
             <img 
-              src={product.image} 
+              src={productImage} 
               alt={product.name} 
-              className="h-full w-full object-cover rounded-2xl" 
+              className="h-full w-full object-contain rounded-xl p-2" 
             />
           ) : (
             <Package className={`text-gray-400 ${isTouchMode ? 'h-10 w-10' : 'h-8 w-8'}`} />
@@ -341,7 +363,7 @@ function ProductCard({ product, onAddToCart, isTouchMode, currency }: ProductCar
           }}
           disabled={isOutOfStock}
           className={`btn btn-primary w-full mt-4 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center space-x-2 ${
-            isTouchMode ? 'btn-lg touch-friendly' : 'btn-md'
+            isTouchMode ? 'btn-md touch-friendly' : 'btn-sm'
           }`}
         >
           {product.isWeightBased ? <Scale className={`${isTouchMode ? 'h-5 w-5' : 'h-4 w-4'}`} /> : <Plus className={`${isTouchMode ? 'h-5 w-5' : 'h-4 w-4'}`} />}

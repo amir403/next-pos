@@ -8,9 +8,10 @@ interface CustomerModalProps {
   isOpen: boolean;
   onClose: () => void;
   customer: Customer | null;
+  onSaved?: (customer: Customer) => void;
 }
 
-export function CustomerModal({ isOpen, onClose, customer }: CustomerModalProps) {
+export function CustomerModal({ isOpen, onClose, customer, onSaved }: CustomerModalProps) {
   const { dispatch } = useApp();
   const [formData, setFormData] = useState({
     name: '',
@@ -94,6 +95,7 @@ export function CustomerModal({ isOpen, onClose, customer }: CustomerModalProps)
       } else {
         const newCustomer = await customersService.create(customerData);
         dispatch({ type: 'ADD_CUSTOMER', payload: newCustomer });
+        onSaved?.(newCustomer);
         swalConfig.success('Customer created successfully!');
       }
       

@@ -78,7 +78,7 @@ const initialState: AppState = {
     storePhone: '+94 11 234 5678',
     storeEmail: 'info@nexterapos.lk',
     taxRate: 0,
-    currency: 'LKR',
+    currency: 'PKR',
     interfaceMode: 'touch',
     autoBackup: true,
     receiptPrinter: true,

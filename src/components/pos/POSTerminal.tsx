@@ -14,6 +14,7 @@ export function POSTerminal() {
   const { user } = useAuth();
   const [showCheckout, setShowCheckout] = useState(false);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
+  const [additionalCharge, setAdditionalCharge] = useState(0);
 
   const addToCart = (product: Product, weight?: number) => {
     // Only check stock if inventory tracking is enabled
@@ -73,6 +74,7 @@ export function POSTerminal() {
   const handleCheckoutComplete = (sale: Sale) => {
     setLastSale(sale);
     setShowCheckout(false);
+    setAdditionalCharge(0);
     
     // Clear current tab after successful checkout
     if (state.activeSalesTab) {
@@ -97,8 +99,8 @@ export function POSTerminal() {
         return sum + (price * item.quantity);
       }, 0);
       const totalDiscount = state.cart.reduce((sum, item) => sum + (item.discount || 0), 0);
-      const taxAmount = (subtotal - totalDiscount) * (state.settings.taxRate / 100);
-      const total = subtotal - totalDiscount + taxAmount;
+      const taxAmount = (subtotal + additionalCharge - totalDiscount) * (state.settings.taxRate / 100);
+      const total = subtotal + additionalCharge - totalDiscount + taxAmount;
 
       const draftSale: Omit<Sale, 'id'> = {
         invoiceNumber: `DRAFT-${Date.now().toString().slice(-6)}`,
@@ -110,17 +112,18 @@ export function POSTerminal() {
         taxAmount,
         total,
         paymentMethod: 'cash',
-        status: 'completed',
+        status: 'draft',
         cashier: user?.user_metadata?.full_name || user?.email || 'Unknown',
         timestamp: new Date(),
         receiptNumber: `DRAFT-${Date.now().toString().slice(-6)}`,
-        notes: 'DRAFT_SALE - payment pending',
+        notes: `DRAFT_SALE - payment pending${additionalCharge > 0 ? ` - Other Charges: ${additionalCharge}` : ''}`,
       };
 
       // Save to Supabase and update local state
       const savedDraft = await salesService.create(draftSale);
       dispatch({ type: 'ADD_SALE', payload: savedDraft });
       dispatch({ type: 'CLEAR_CART' });
+      setAdditionalCharge(0);
       
       // Clear current tab
       if (state.activeSalesTab) {
@@ -145,12 +148,13 @@ export function POSTerminal() {
       <SalesTabManager />
       <div className="flex flex-1 overflow-hidden">
         <ProductGrid onAddToCart={addToCart} />
-        <Cart onCheckout={handleCheckout} onSaveDraft={saveDraft} />
+        <Cart onCheckout={handleCheckout} onSaveDraft={saveDraft} additionalCharge={additionalCharge} onAdditionalChargeChange={setAdditionalCharge} />
         
         <CheckoutModal
           isOpen={showCheckout}
           onClose={() => setShowCheckout(false)}
           onComplete={handleCheckoutComplete}
+          additionalCharge={additionalCharge}
         />
       </div>
     </div>

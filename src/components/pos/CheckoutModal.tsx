@@ -11,14 +11,19 @@ interface CheckoutModalProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: (sale: Sale) => void;
+  additionalCharge: number;
 }
 
-export function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutModalProps) {
+export function CheckoutModal({ isOpen, onClose, onComplete, additionalCharge }: CheckoutModalProps) {
   const { state, dispatch } = useApp();
   const { user } = useAuth();
   const generateInvoice = useInvoiceGeneration();
   const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [paymentType, setPaymentType] = useState<'full' | 'partial'>('full');
   const [amountPaid, setAmountPaid] = useState('');
+  const [transactionNumber, setTransactionNumber] = useState('');
+  const [checkoutDiscountValue, setCheckoutDiscountValue] = useState('');
+  const [checkoutDiscountType, setCheckoutDiscountType] = useState<'percentage' | 'fixed'>('percentage');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [completedSale, setCompletedSale] = useState<Sale | null>(null);
@@ -131,6 +136,10 @@ export function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutModalProp
   useEffect(() => {
     if (isOpen) {
       setAmountPaid('');
+      setPaymentType('full');
+      setTransactionNumber('');
+      setCheckoutDiscountValue('');
+      setCheckoutDiscountType('percentage');
       setIsProcessing(false);
       setShowReceipt(false);
       setCompletedSale(null);
@@ -220,14 +229,14 @@ export function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutModalProp
   }, [isOpen, state.cart, state.selectedCustomer, paymentMethod, subtotal, state.discounts, state.products, cardDetails]);
 
   const totalAutoDiscount = appliedDiscounts.reduce((sum, discount) => sum + discount.discountAmount, 0);
-  const totalDiscount = manualDiscount + totalAutoDiscount;
-  const taxAmount = (subtotal - totalDiscount) * (state.settings.taxRate / 100);
-  const total = subtotal - totalDiscount + taxAmount;
+  const checkoutDiscountInput = Math.max(0, parseFloat(checkoutDiscountValue) || 0);
+  const checkoutDiscount = checkoutDiscountType === 'percentage'
+    ? Math.min(subtotal + additionalCharge, ((subtotal + additionalCharge) * checkoutDiscountInput) / 100)
+    : Math.min(subtotal + additionalCharge, checkoutDiscountInput);
+  const totalDiscount = manualDiscount + totalAutoDiscount + checkoutDiscount;
+  const taxAmount = Math.max(0, subtotal + additionalCharge - totalDiscount) * (state.settings.taxRate / 100);
+  const total = Math.max(0, subtotal + additionalCharge - totalDiscount + taxAmount);
   const change = parseFloat(amountPaid) - total;
-
-  // Check if customer has enough credit limit for credit payment
-  const canPayWithCredit = state.selectedCustomer && 
-    (state.selectedCustomer.creditLimit - state.selectedCustomer.creditUsed) >= total;
 
   // Check if payment can be processed
   const canProcessPayment = () => {
@@ -235,7 +244,7 @@ export function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutModalProp
     
     switch (paymentMethod) {
       case 'cash':
-        return amountPaid && parseFloat(amountPaid) >= total;
+        return amountPaid && parseFloat(amountPaid) > 0 && (paymentType === 'partial' ? parseFloat(amountPaid) < total : parseFloat(amountPaid) >= total);
       case 'card':
         return cardDetails.bankName && 
                cardDetails.holderName && 
@@ -246,7 +255,8 @@ export function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutModalProp
       case 'credit':
         return canPayWithCredit;
       case 'digital':
-        return true;
+        return Boolean(transactionNumber.trim()) && amountPaid && parseFloat(amountPaid) > 0 &&
+          (paymentType === 'partial' ? parseFloat(amountPaid) < total : parseFloat(amountPaid) >= total);
       default:
         return false;
     }
@@ -279,11 +289,15 @@ export function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutModalProp
           ...cardDetails as CardDetails,
           id: Date.now().toString()
         } : undefined,
-        status: paymentMethod === 'credit' ? 'credit' : 'completed',
+        status: paymentType === 'partial' ? 'pending' : 'completed',
         cashier: user?.user_metadata?.full_name || user?.email || 'Unknown',
         timestamp: new Date(),
         receiptNumber: invoiceNumber,
-        notes: paymentMethod === 'credit' ? creditNotes : undefined,
+        notes: [
+          paymentType === 'partial' ? `Partial payment: ${amountPaid} (Balance: ${(total - parseFloat(amountPaid || '0')).toFixed(2)})` : 'Full payment',
+          paymentMethod === 'digital' ? `Bank Transaction: ${transactionNumber.trim()}` : undefined,
+          creditNotes || undefined
+        ].filter(Boolean).join(' - '),
         appliedDiscounts,
         freeGifts: freeGifts.length > 0 ? freeGifts : undefined,
       };
@@ -371,7 +385,7 @@ export function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutModalProp
       {/* Only show checkout modal when receipt is not being shown and modal is open */}
       {!showReceipt && isOpen && (
         <div className="modal-overlay">
-          <div className={`modal ${isTouchMode ? 'max-w-lg' : 'max-w-md'}`}>
+          <div className={`modal ${isTouchMode ? 'max-w-3xl' : 'max-w-2xl'}`}>
             {/* Header */}
             <div className="modal-header">
               <h2 className={`font-bold text-gray-900 ${isTouchMode ? 'text-xl' : 'text-lg'}`}>
@@ -451,6 +465,10 @@ export function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutModalProp
                     <span>Subtotal:</span>
                     <span className="font-medium">{state.settings.currency} {subtotal.toFixed(2)}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span>Other Charges:</span>
+                    <span className="font-medium">{state.settings.currency} {additionalCharge.toFixed(2)}</span>
+                  </div>
                   {totalDiscount > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>Total Discount:</span>
@@ -466,6 +484,36 @@ export function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutModalProp
                     <span>{state.settings.currency} {total.toFixed(2)}</span>
                   </div>
                 </div>
+
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-xl">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Checkout Discount</label>
+                  <div className="flex gap-2">
+                    <select
+                      value={checkoutDiscountType}
+                      onChange={(e) => setCheckoutDiscountType(e.target.value as 'percentage' | 'fixed')}
+                      className="select w-24"
+                      disabled={isProcessing}
+                    >
+                      <option value="percentage">%</option>
+                      <option value="fixed">{state.settings.currency}</option>
+                    </select>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={checkoutDiscountValue}
+                      onChange={(e) => setCheckoutDiscountValue(e.target.value)}
+                      placeholder="Enter discount"
+                      className="input flex-1"
+                      disabled={isProcessing}
+                    />
+                  </div>
+                  {checkoutDiscount > 0 && (
+                    <p className="text-xs text-green-700 mt-2">
+                      Discount applied: -{state.settings.currency} {checkoutDiscount.toFixed(2)}
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Payment Method */}
@@ -477,19 +525,16 @@ export function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutModalProp
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     { id: 'cash', label: 'Cash', icon: Banknote },
-                    { id: 'card', label: 'Card', icon: CreditCard },
                     { id: 'digital', label: 'Digital', icon: Smartphone },
-                    { id: 'credit', label: 'Credit', icon: Receipt },
                   ].map(({ id, label, icon: Icon }) => (
                     <button
                       key={id}
                       onClick={() => setPaymentMethod(id)}
-                      disabled={id === 'credit' && !canPayWithCredit}
                       className={`flex flex-col items-center space-y-2 p-4 rounded-2xl border-2 transition-all ${
                         paymentMethod === id
                           ? 'border-blue-500 bg-blue-50 text-blue-700'
                           : 'border-gray-200 hover:border-gray-300'
-                      } ${id === 'credit' && !canPayWithCredit ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                      } cursor-pointer
                       ${isTouchMode ? 'min-h-[80px]' : 'min-h-[70px]'}`}
                     >
                       <Icon className={`${isTouchMode ? 'h-6 w-6' : 'h-5 w-5'}`} />
@@ -500,51 +545,48 @@ export function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutModalProp
                   ))}
                 </div>
 
-                {/* Credit Payment Warning */}
-                {paymentMethod === 'credit' && !canPayWithCredit && (
-                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center space-x-2">
-                    <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-                    <span className="text-red-700 text-sm">
-                      {state.selectedCustomer 
-                        ? 'Insufficient credit limit' 
-                        : 'Please select a customer for credit payment'
-                      }
-                    </span>
-                  </div>
-                )}
-
-                {/* Credit Available Info */}
-                {paymentMethod === 'credit' && state.selectedCustomer && (
-                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
-                    <div className="text-sm text-blue-800">
-                      <div className="flex justify-between">
-                        <span>Credit Limit:</span>
-                        <span>{state.settings.currency} {state.selectedCustomer.creditLimit.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Used:</span>
-                        <span>{state.settings.currency} {state.selectedCustomer.creditUsed.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between font-semibold border-t border-blue-200 pt-1 mt-1">
-                        <span>Available:</span>
-                        <span>{state.settings.currency} {(state.selectedCustomer.creditLimit - state.selectedCustomer.creditUsed).toFixed(2)}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Cash Payment */}
-              {paymentMethod === 'cash' && (
+              {(paymentMethod === 'cash' || paymentMethod === 'digital') && (
                 <div>
                   <h3 className={`font-semibold text-gray-900 mb-4 ${isTouchMode ? 'text-lg' : 'text-base'}`}>
-                    Cash Payment
+                    {paymentMethod === 'digital' ? 'Digital Payment' : 'Cash Payment'}
                   </h3>
                   
                   <div className="space-y-4">
                     <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Payment Type</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {(['full', 'partial'] as const).map((type) => (
+                          <button
+                            key={type}
+                            type="button"
+                            onClick={() => setPaymentType(type)}
+                            className={`btn ${paymentType === type ? 'btn-primary' : 'btn-secondary'} h-11 capitalize`}
+                            disabled={isProcessing}
+                          >
+                            {type} Payment
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {paymentMethod === 'digital' && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Bank Transaction Number *</label>
+                        <input
+                          type="text"
+                          value={transactionNumber}
+                          onChange={(e) => setTransactionNumber(e.target.value)}
+                          className="input"
+                          placeholder="Enter bank transaction number"
+                          disabled={isProcessing}
+                        />
+                      </div>
+                    )}
+                    <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Amount Received *
+                        {paymentType === 'partial' ? 'Amount Paid *' : 'Amount Received *'}
                       </label>
                       <input
                         type="number"
@@ -558,7 +600,7 @@ export function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutModalProp
                       />
                     </div>
                     
-                    {amountPaid && parseFloat(amountPaid) >= total && (
+                    {paymentType === 'full' && amountPaid && parseFloat(amountPaid) >= total && paymentMethod === 'cash' && (
                       <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                         <div className="flex justify-between items-center">
                           <span className="font-semibold text-green-800">Change Due:</span>
@@ -566,6 +608,12 @@ export function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutModalProp
                             {state.settings.currency} {change.toFixed(2)}
                           </span>
                         </div>
+                      </div>
+                    )}
+                    {paymentType === 'partial' && amountPaid && parseFloat(amountPaid) > 0 && parseFloat(amountPaid) < total && (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex justify-between">
+                        <span className="font-semibold text-yellow-800">Remaining Balance:</span>
+                        <span className="font-bold text-yellow-800">{state.settings.currency} {(total - parseFloat(amountPaid)).toFixed(2)}</span>
                       </div>
                     )}
                   </div>

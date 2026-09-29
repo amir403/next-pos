@@ -158,6 +158,7 @@ export function Settings() {
                       <option value="EUR">EUR - Euro</option>
                       <option value="GBP">GBP - British Pound</option>
                       <option value="CAD">CAD - Canadian Dollar</option>
+                      <option value="PKR">PKR - Pakistani Rupee</option>
                       <option value="LKR">LKR - Sri Lankan Rupee</option>
                     </select>
                   </div>

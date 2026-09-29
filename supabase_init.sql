@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS app_settings (
     store_email TEXT,
     store_logo TEXT,
     tax_rate DECIMAL(5,4) DEFAULT 0.0000,
-    currency TEXT DEFAULT 'USD',
+    currency TEXT DEFAULT 'PKR',
     interface_mode TEXT DEFAULT 'touch' CHECK (interface_mode IN ('touch', 'traditional')),
     auto_backup BOOLEAN DEFAULT true,
     receipt_printer BOOLEAN DEFAULT false,

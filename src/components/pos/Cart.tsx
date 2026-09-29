@@ -2,15 +2,19 @@ import { useState } from 'react';
 import { Trash2, Plus, Minus, User, Percent, FileText, ShoppingCart } from 'lucide-react';
 import { CartItem, Customer } from '../../types';
 import { useApp } from '../../context/SupabaseAppContext';
+import { CustomerModal } from '../customers/CustomerModal';
 
 interface CartProps {
   onCheckout: () => void;
   onSaveDraft: () => void;
+  additionalCharge: number;
+  onAdditionalChargeChange: (amount: number) => void;
 }
 
-export function Cart({ onCheckout, onSaveDraft }: CartProps) {
+export function Cart({ onCheckout, onSaveDraft, additionalCharge, onAdditionalChargeChange }: CartProps) {
   const { state, dispatch } = useApp();
   const [showCustomerSearch, setShowCustomerSearch] = useState(false);
+  const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [customerSearch, setCustomerSearch] = useState('');
 
   const isTouchMode = state.settings.interfaceMode === 'touch';
@@ -78,15 +82,15 @@ export function Cart({ onCheckout, onSaveDraft }: CartProps) {
     return sum + (price * item.quantity);
   }, 0);
   const totalDiscount = state.cart.reduce((sum, item) => sum + (item.discount || 0), 0);
-  const taxAmount = (subtotal - totalDiscount) * (state.settings.taxRate / 100);
-  const total = subtotal - totalDiscount + taxAmount;
+  const taxAmount = (subtotal + additionalCharge - totalDiscount) * (state.settings.taxRate / 100);
+  const total = subtotal + additionalCharge - totalDiscount + taxAmount;
 
   // Debug: Log current tax rate (remove this in production)
   console.log('Current tax rate:', state.settings.taxRate);
 
   return (
-    <div className={`bg-white border-l border-gray-100 flex flex-col h-screen ${
-      isTouchMode ? 'w-96' : 'w-80'
+    <div className={`bg-white border-l border-gray-100 flex flex-col h-screen flex-shrink-0 ${
+      isTouchMode ? 'w-[32rem]' : 'w-[28rem]'
     } max-w-full`}>
       {/* Cart Header */}
       <div className="p-4 lg:p-6 border-b border-gray-100 flex-shrink-0">
@@ -147,6 +151,17 @@ export function Cart({ onCheckout, onSaveDraft }: CartProps) {
                   className="input input-sm"
                   autoFocus
                 />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCustomerSearch(false);
+                    setShowCustomerModal(true);
+                  }}
+                  className="btn btn-primary btn-sm w-full mt-3"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Add New Customer</span>
+                </button>
               </div>
               <div className="max-h-48 overflow-y-auto">
                 {filteredCustomers.map((customer) => (
@@ -168,6 +183,15 @@ export function Cart({ onCheckout, onSaveDraft }: CartProps) {
             </div>
           )}
         </div>
+        <CustomerModal
+          isOpen={showCustomerModal}
+          onClose={() => setShowCustomerModal(false)}
+          customer={null}
+          onSaved={(customer) => {
+            selectCustomer(customer);
+            setShowCustomerModal(false);
+          }}
+        />
       </div>
 
       {/* Cart Items */}
@@ -216,6 +240,15 @@ export function Cart({ onCheckout, onSaveDraft }: CartProps) {
             <div className="flex justify-between text-gray-600">
               <span>Tax ({state.settings.taxRate}%):</span>
               <span className="font-medium">{state.settings.currency} {taxAmount.toFixed(2)}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <label htmlFor="other-charge" className="text-gray-600">Other Charges:</label>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">{state.settings.currency}</span>
+                <input id="other-charge" type="number" min="0" step="0.01" value={additionalCharge || ''}
+                  onChange={(e) => onAdditionalChargeChange(Math.max(0, parseFloat(e.target.value) || 0))}
+                  placeholder="0.00" className="input input-sm w-28 text-right" />
+              </div>
             </div>
             <div className="flex justify-between text-xl font-bold text-gray-900 pt-3 border-t border-gray-200">
               <span>Total:</span>
